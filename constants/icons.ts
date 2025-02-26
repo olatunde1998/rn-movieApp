@@ -1,6 +1,7 @@
 import bookmark from "@/assets/icons/bookmark.png";
 import eyeHide from "@/assets/icons/eye-hide.png";
 import eye from "@/assets/icons/eye.png";
+import editImage from "@/assets/icons/image-edit.png";
 import home from "@/assets/icons/home.png";
 import leftArrow from "@/assets/icons/left-arrow.png";
 import logout from "@/assets/icons/logout.png";
@@ -15,6 +16,7 @@ export default {
   bookmark,
   eyeHide,
   eye,
+  editImage,
   home,
   leftArrow,
   logout,
