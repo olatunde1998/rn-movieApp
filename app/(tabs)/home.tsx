@@ -1,12 +1,21 @@
-import { Text, ScrollView, FlatList, ActivityIndicator } from "react-native";
+import {
+  Text,
+  ScrollView,
+  FlatList,
+  ActivityIndicator,
+  View,
+} from "react-native";
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MovieListItem from "@/components/MovieListItem";
 import { fetchTopRatedMovies } from "@/services/movies";
 import { useQuery } from "@tanstack/react-query";
 import EmptyState from "@/components/EmptyState";
+import { useUser } from "@clerk/clerk-expo";
+import { Link } from "expo-router";
 
 const Home = () => {
+  const { user } = useUser();
   const { data, isLoading, error } = useQuery({
     queryKey: ["movies"],
     queryFn: fetchTopRatedMovies,
@@ -17,7 +26,7 @@ const Home = () => {
   if (error) {
     return <Text>Error: {error.message}</Text>;
   }
-
+  console.error(user, "this is user details");
   // const movies = data?.pages?.flat();
   // console.log(JSON.stringify(data, null, 2));
   // console.log(JSON.stringify(movies, null, 2));
@@ -28,7 +37,7 @@ const Home = () => {
       <FlatList
         data={data}
         numColumns={2}
-        contentContainerClassName="gap-5 p-5 pb-32"
+        contentContainerClassName="gap-5 p-5 pb-48"
         columnWrapperStyle={{ gap: 5 }}
         ListEmptyComponent={() =>
           isLoading ? (
