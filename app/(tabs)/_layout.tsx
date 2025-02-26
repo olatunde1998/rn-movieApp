@@ -44,7 +44,7 @@ const TabsLayout = () => {
             position: "absolute",
             borderTopColor: "#232533",
             borderTopWidth: 1,
-            minHeight: 84,
+            minHeight: 64,
           },
         }}
       >
