@@ -1,12 +1,11 @@
-
 const accessToken = process.env.EXPO_PUBLIC_MOVIE_DB_ACCESS_TOKEN;
 const headers = {
   accept: "application/json",
   Authorization: "Bearer " + accessToken,
 };
 
-export const fetchTopRatedMovies = async () => {
-  const url = `https://api.themoviedb.org/3/movie/top_rated?language=en-US&page=1`;
+export const fetchTopRatedMovies = async ({ pageParam = 1 }) => {
+  const url = `https://api.themoviedb.org/3/movie/top_rated?language=en-US&page=${pageParam}`;
   const options = {
     method: "GET",
     headers,
