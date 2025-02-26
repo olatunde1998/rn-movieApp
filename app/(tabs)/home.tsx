@@ -1,47 +1,43 @@
-import {
-  Text,
-  ScrollView,
-  FlatList,
-  ActivityIndicator,
-  View,
-} from "react-native";
+import { Text, FlatList, ActivityIndicator } from "react-native";
 import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import MovieListItem from "@/components/MovieListItem";
 import { fetchTopRatedMovies } from "@/services/movies";
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import EmptyState from "@/components/EmptyState";
-import { useUser } from "@clerk/clerk-expo";
-import { Link } from "expo-router";
 
 const Home = () => {
-  const { user } = useUser();
-  const { data, isLoading, error } = useQuery({
+  const { data, isLoading, error, fetchNextPage } = useInfiniteQuery({
     queryKey: ["movies"],
-    queryFn: fetchTopRatedMovies,
+    queryFn: ({ pageParam }) => fetchTopRatedMovies(pageParam as number | any),
+    initialPageParam: 1,
+    getNextPageParam: (lastPage, pages) =>
+      lastPage.length > 0 ? pages.length + 1 : undefined,
   });
+
   if (isLoading) {
     return <ActivityIndicator />;
   }
+
   if (error) {
     return <Text>Error: {error.message}</Text>;
   }
-  console.error(user, "this is user details");
-  // const movies = data?.pages?.flat();
-  // console.log(JSON.stringify(data, null, 2));
+
+  const movies = data?.pages?.flat();
   // console.log(JSON.stringify(movies, null, 2));
 
   return (
     <SafeAreaView>
       <Text className="text-2xl font-bold text-center mb-5">Movies</Text>
       <FlatList
-        data={data}
+        data={movies}
         numColumns={2}
         contentContainerClassName="gap-5 p-5 pb-48"
         columnWrapperStyle={{ gap: 5 }}
+        keyExtractor={(item, index) => `${item.id}-${index}`}
         ListEmptyComponent={() =>
           isLoading ? (
-            <ActivityIndicator size="large" className="text-primary-300 mt-5" />
+            <ActivityIndicator size="large" className="text-red-800 mt-40" />
           ) : (
             <EmptyState
               title="No Movie Found"
@@ -51,8 +47,7 @@ const Home = () => {
         }
         renderItem={({ item }) => <MovieListItem movie={item} />}
         onEndReached={() => {
-          // fetchNextPage();
-          console.log("fetching next page");
+          fetchNextPage();
         }}
       />
     </SafeAreaView>
