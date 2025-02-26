@@ -24,7 +24,8 @@ const Profile = () => {
         <View className="flex flex-row items-center justify-between mt-5">
           <Text className="text-3xl font-bold">Your profile</Text>
           <TouchableOpacity
-            onPress={() => router.push("/sign-in")}
+            // onPress={() => router.push("/sign-in")}
+            onPress={() => router.back()}
             className="p-4 rounded-full bg-white shadow-xs"
           >
             <Image source={icons.logout} className="size-6" />
