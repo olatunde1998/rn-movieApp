@@ -1,5 +1,6 @@
 import icons from "@/constants/icons";
 import { fetchMovie } from "@/services/movies";
+import { addMovieToWatchList } from "@/services/watchList";
 import { FontAwesome } from "@expo/vector-icons";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -11,6 +12,7 @@ import {
   Pressable,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -18,7 +20,7 @@ const MovieDetails = () => {
   const { id } = useLocalSearchParams();
   const router = useRouter();
 
-  const client = useQueryClient();
+  const queryClient = useQueryClient();
 
   const {
     data: movie,
@@ -29,12 +31,15 @@ const MovieDetails = () => {
     queryFn: () => fetchMovie(id as number | any),
   });
 
-  //   const { mutate } = useMutation({
-  //     mutationFn: () => addMovieToWatchList(id),
-  //     onSuccess: () => {
-  //       client.invalidateQueries(["watchlist"]);
-  //     },
-  //   });
+  const { mutate } = useMutation({
+    mutationFn: () => addMovieToWatchList(id as number | any),
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["watchlist"],
+      });
+      Alert.alert("Success", "Movie added to Watch List");
+    },
+  });
 
   if (isLoading) {
     return <ActivityIndicator />;
@@ -75,7 +80,7 @@ const MovieDetails = () => {
           </Text>
           <View style={{ marginVertical: 10 }}>
             <Pressable
-              // onPress={() => mutate()}
+              onPress={() => mutate()}
               style={{ flexDirection: "row", alignItems: "center", gap: 5 }}
             >
               <FontAwesome name="bookmark-o" size={24} color="black" />
