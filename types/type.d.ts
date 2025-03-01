@@ -29,9 +29,11 @@ declare interface FormFieldProps extends TextInputProps {
   title?: string;
   value?: string;
   placeholder?: string;
-  handleChangeText?: (text: string) => void;
   otherStyles?: string;
   secureTextEntry?: boolean;
-  inputStyle?: string;
   className?: string;
+  control: any;
+  name: string;
+  rules?: object;
+  keyboardType?: KeyboardTypeOptions;
 }

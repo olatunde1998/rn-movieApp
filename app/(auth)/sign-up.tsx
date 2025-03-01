@@ -7,34 +7,29 @@ import { Link, useRouter } from "expo-router";
 import CustomButton from "@/components/CustomButton";
 import { useSignUp } from "@clerk/clerk-expo";
 import { ReactNativeModal } from "react-native-modal";
+import { useForm } from "react-hook-form";
 
 const SignUp = () => {
   const { isLoaded, signUp, setActive } = useSignUp();
   const router = useRouter();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-
-  const [form, setForm] = useState({
-    username: "",
-    email: "",
-    password: "",
-  });
-
   const [verification, setVerification] = useState({
     state: "default",
     error: "",
-    code: "",
   });
 
+  const { control, handleSubmit, getValues } = useForm();
+
   // Handle submission of sign-up form
-  const onSignUpPress = async () => {
+  const onSignUpPress = async (data: any) => {
     if (!isLoaded) return;
 
     // Start sign-up process using email and password provided
     try {
       await signUp.create({
-        username: form.username,
-        emailAddress: form.email,
-        password: form.password,
+        username: data.username,
+        emailAddress: data.email,
+        password: data.password,
       });
 
       // Send user an email with verification code
@@ -50,7 +45,7 @@ const SignUp = () => {
       // See https://clerk.com/docs/custom-flows/error-handling
       // for more info on error handling
       Alert.alert("Error", err.errors[0].longMessage);
-      console.error(JSON.stringify(err.errors[0].longMessage, null, 2));
+      // console.error(JSON.stringify(err.errors[0].longMessage, null, 2));
     }
   };
 
@@ -59,38 +54,31 @@ const SignUp = () => {
     if (!isLoaded) return;
 
     try {
+      const code = getValues("code");
       // Use the code the user provided to attempt verification
       const signUpAttempt = await signUp.attemptEmailAddressVerification({
-        code: verification.code,
+        code: code,
       });
 
       // If verification was completed, set the session to active
       // and redirect the user
       if (signUpAttempt.status === "complete") {
         await setActive({ session: signUpAttempt.createdSessionId });
-        setVerification({
-          ...verification,
-          state: "success",
-        });
+        setVerification({ state: "success", error: "" });
       } else {
         // If the status is not complete, check why. User may need to
         // complete further steps.
         console.error(JSON.stringify(signUpAttempt, null, 2));
         setVerification({
-          ...verification,
-          error: "Verification failed. Please try again.",
           state: "failed",
+          error: "Verification failed. Please try again.",
         });
       }
     } catch (err: any) {
       // See https://clerk.com/docs/custom-flows/error-handling
       // for more info on error handling
-      console.error(JSON.stringify(err.errors[0].longMessage, null, 2));
-      setVerification({
-        ...verification,
-        error: err.errors[0].longMessage,
-        state: "failed",
-      });
+      // console.error(JSON.stringify(err.errors[0].longMessage, null, 2));
+      setVerification({ state: "failed", error: err.errors[0].longMessage });
     }
   };
 
@@ -109,31 +97,50 @@ const SignUp = () => {
 
           <FormField
             title="Username"
-            value={form.username}
-            handleChangeText={(e: any) => setForm({ ...form, username: e })}
-            otherStyles="mt-7"
+            control={control}
+            name="username"
+            rules={{
+              required: "Username is required",
+            }}
             placeholder="Your unique username"
+            otherStyles="mt-7"
           />
 
           <FormField
             title="Email"
-            value={form.email}
-            handleChangeText={(e: any) => setForm({ ...form, email: e })}
-            otherStyles="mt-7"
+            control={control}
+            name="email"
+            rules={{
+              required: "Email is required",
+              pattern: {
+                value:
+                  /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+                message: "Invalid email address",
+              },
+            }}
             placeholder="joedoe@mail.com"
+            keyboardType="email-address"
+            otherStyles="mt-7"
           />
 
           <FormField
             title="Password"
-            value={form.password}
-            handleChangeText={(e) => setForm({ ...form, password: e })}
-            otherStyles="mt-7"
+            control={control}
+            name="password"
+            rules={{
+              required: "Password is required",
+              minLength: {
+                value: 6,
+                message: "Password should be minimum 6 characters long",
+              },
+            }}
             placeholder="*********"
+            otherStyles="mt-7"
           />
 
           <CustomButton
             title="Sign Up"
-            handlePress={onSignUpPress}
+            handlePress={handleSubmit(onSignUpPress)}
             className="mt-7"
           />
 
@@ -163,15 +170,20 @@ const SignUp = () => {
               Verification
             </Text>
             <Text className="font-Jakarta mb-5">
-              We've sent a verification code to {form.email}.
+              We've sent a verification code to {getValues("email")}.
             </Text>
             <FormField
-              placeholder={"12345"}
-              value={verification.code}
+              placeholder={"123456"}
+              control={control}
+              name="code"
+              rules={{
+                required: "Code is required",
+                minLength: {
+                  value: 6,
+                  message: "OTP Code should be minimum 6 characters long",
+                },
+              }}
               keyboardType="numeric"
-              onChangeText={(code) =>
-                setVerification({ ...verification, code })
-              }
             />
             {verification.error && (
               <Text className="text-red-500 text-sm mt-1">
@@ -180,7 +192,7 @@ const SignUp = () => {
             )}
             <CustomButton
               title="Verify Email"
-              handlePress={onVerifyPress}
+              handlePress={handleSubmit(onVerifyPress)}
               className="mt-5 bg-success-500"
             />
           </View>

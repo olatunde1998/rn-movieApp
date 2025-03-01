@@ -1,29 +1,28 @@
 import { View, Text, ScrollView, Image, Alert } from "react-native";
-import React, { useState } from "react";
+import React from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import images from "@/constants/images";
 import FormField from "@/components/FormField";
-import { Link, router, useRouter } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import CustomButton from "@/components/CustomButton";
 import { useSignIn } from "@clerk/clerk-expo";
+import { useForm } from "react-hook-form";
 
 const SignInPage = () => {
   const { signIn, setActive, isLoaded } = useSignIn();
   const router = useRouter();
-  const [form, setForm] = useState({
-    email: "",
-    password: "",
-  });
+
+  const { control, handleSubmit } = useForm();
 
   // Handle the submission of the sign-in form
-  const onSignInPress = async () => {
+  const onSignInPress = async (data: any) => {
     if (!isLoaded) return;
 
     // Start the sign-in process using the email and password provided
     try {
       const signInAttempt = await signIn.create({
-        identifier: form.email,
-        password: form.password,
+        identifier: data.email,
+        password: data.password,
       });
 
       // If sign-in process is complete, set the created session as active
@@ -32,14 +31,23 @@ const SignInPage = () => {
         await setActive({ session: signInAttempt.createdSessionId });
         router.replace("/");
       } else {
-        // If the status isn't complete, check why. User might need to
-        // complete further steps.
-        console.error(JSON.stringify(signInAttempt, null, 2));
+        // If the status isn't complete, check why. User might need to complete further steps.
+        // console.error(signInAttempt, null, 2)
+        Alert.alert("Error", JSON.stringify(signInAttempt, null, 2));
       }
     } catch (err: any) {
       // See https://clerk.com/docs/custom-flows/error-handling
       // for more info on error handling
-      console.error(JSON.stringify(err.errors[0].longMessage, null, 2));
+      Alert.alert(
+        "Error",
+        err.errors[0].message === "Couldn't find your account."
+          ? "Invalid Credentials"
+          : err.errors[0].message ===
+            "Password is incorrect. Try again, or use another method."
+          ? "Invalid Credentials"
+          : err.errors[0].message
+      );
+      // console.error(JSON.stringify(err.errors[0].longMessage, null, 2));
     }
   };
   return (
@@ -57,15 +65,33 @@ const SignInPage = () => {
 
           <FormField
             title="Email"
-            value={form.email}
-            handleChangeText={(e: any) => setForm({ ...form, email: e })}
+            control={control}
+            name="email"
+            rules={{
+              required: "Email is required",
+              pattern: {
+                value:
+                  /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+                message: "Invalid email address",
+              },
+            }}
+            placeholder="Your Email"
+            keyboardType="email-address"
             otherStyles="mt-7"
           />
 
           <FormField
             title="Password"
-            value={form.password}
-            handleChangeText={(e) => setForm({ ...form, password: e })}
+            control={control}
+            name="password"
+            rules={{
+              required: "Password is required",
+              minLength: {
+                value: 6,
+                message: "Password should be minimum 6 characters long",
+              },
+            }}
+            placeholder="Your Password"
             otherStyles="mt-7"
           />
 
@@ -78,7 +104,7 @@ const SignInPage = () => {
 
           <CustomButton
             title="Sign In"
-            handlePress={onSignInPress}
+            handlePress={handleSubmit(onSignInPress)}
             className="mt-7"
           />
 
