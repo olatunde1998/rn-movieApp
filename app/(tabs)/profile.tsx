@@ -3,18 +3,28 @@ import React, { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import icons from "@/constants/icons";
 import images from "@/constants/images";
-import { router } from "expo-router";
 import ProfileField from "@/components/ProfileField";
-import { useUser } from "@clerk/clerk-expo";
+import { useUser, useClerk } from "@clerk/clerk-expo";
+import * as Linking from "expo-linking";
 
 const Profile = () => {
   const { user } = useUser();
+  const { signOut } = useClerk();
   const [form, setForm] = useState({
     username: "Joe Doe",
     lastName: "geodevcodes",
     email: "marin@jsmastery.pro",
     phoneNumber: "+2348133642798",
   });
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      Linking.openURL(Linking.createURL("/"));
+    } catch (err) {
+      console.error(JSON.stringify(err, null, 2));
+    }
+  };
   return (
     <SafeAreaView className="bg-general-500 h-full">
       <ScrollView
@@ -24,8 +34,7 @@ const Profile = () => {
         <View className="flex flex-row items-center justify-between mt-5">
           <Text className="text-3xl font-bold">Your profile</Text>
           <TouchableOpacity
-            // onPress={() => router.push("/sign-in")}
-            onPress={() => router.back()}
+            onPress={handleSignOut}
             className="p-4 rounded-full bg-white shadow-xs"
           >
             <Image source={icons.logout} className="size-6" />
