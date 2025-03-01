@@ -5,20 +5,17 @@ import images from "@/constants/images";
 import FormField from "@/components/FormField";
 import { Link, router } from "expo-router";
 import CustomButton from "@/components/CustomButton";
+import { useForm } from "react-hook-form";
 
 const ForgotPassword = () => {
   const [isSubmitting, setSubmitting] = useState(false);
-  const [form, setForm] = useState({
-    email: "",
-  });
+  const { control, handleSubmit } = useForm();
 
-  const submit = async () => {
-    if (form.email === "") {
-      Alert.alert("Error", "Please fill in all fields");
-    }
+  const onSubmitHandler = async (data: any) => {
     setSubmitting(true);
+    console.log(data.email, "this is email here==");
     try {
-      Alert.alert("Success", "User signed in successfully");
+      // Alert.alert("Success", "Verification link sent to email");
       router.replace("/sign-in");
     } catch (error: any) {
       // Alert.alert("Error", error.message);
@@ -42,15 +39,24 @@ const ForgotPassword = () => {
 
           <FormField
             title="Email"
-            value={form.email}
-            handleChangeText={(e: any) => setForm({ ...form, email: e })}
+            control={control}
+            name="email"
+            rules={{
+              required: "Email is required",
+              pattern: {
+                value:
+                  /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+                message: "Invalid email address",
+              },
+            }}
+            placeholder="Your Email"
+            keyboardType="email-address"
             otherStyles="mt-7"
-            placeholder="joedoe@mail.com"
           />
 
           <CustomButton
             title="Forgot Password"
-            handlePress={submit}
+            handlePress={handleSubmit(onSubmitHandler)}
             className="mt-7"
             // isLoading={isSubmitting}
           />
